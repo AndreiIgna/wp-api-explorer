@@ -1,7 +1,7 @@
 <template>
 	<div class="home">
 		<section class="page-head">
-			<div class="container text-center py-5">
+			<div class="container text-center py-4">
 				<h3 class="mb-3">Url of any WordPress site</h3>
 				<div class="row justify-content-center">
 					<div class="col-7">
@@ -64,7 +64,7 @@
 							<div class="card">
 
 								<div v-if="media.media_type === 'file' && media.mime_type.includes('video/')" class="embed-responsive embed-responsive-16by9">
-									<video controls loading="lazy">
+									<video controls preload="metadata" loading="lazy">
 										<source :src="media.source_url" :type="media.mime_type">
 										Sorry, your browser doesn't support embedded videos.
 									</video>
