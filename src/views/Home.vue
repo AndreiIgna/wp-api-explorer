@@ -257,7 +257,7 @@ export default {
 
 			return axios.get(`${this.site.apiUrl}${path}`, data)
 		},
-		load(type) {
+		load: debounce(function(type) {
 			const t = this.site.types[type]
 			t.state = 'loading'
 			t.error = null
@@ -283,7 +283,7 @@ export default {
 				t.error = error.message
 				console.log('error', error)
 			})
-		},
+		}, 350),
 	},
 	watch: {
 		q(q, queryOld) {
