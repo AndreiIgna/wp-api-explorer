@@ -28,87 +28,161 @@
 					<li class="nav-item">
 						<router-link :to="`/${$route.params.host}`" class="nav-link" :class="{active: !$route.params.tab}">Overview</router-link>
 					</li>
+					<!--
+					<li class="nav-item">
+						<router-link :to="`/${$route.params.host}/taxonomies`" class="nav-link" :class="{active: $route.params.tab === 'taxonomies'}">Taxonomies</router-link>
+					</li>
+					-->
 					<li v-for="type in site.types" :key="type.slug" class="nav-item">
 						<router-link :to="`/${$route.params.host}/${type.slug}`" class="nav-link" :class="{active: $route.params.tab === type.slug}">{{ type.name }} <span v-if="type.total" class="badge badge-light-secondary badge-pill">{{ type.total }}</span></router-link>
 					</li>
 				</ul>
 
-				<div v-if="$route.params.tab === 'attachment' && site.types.attachment">
+				<div v-if="$route.params.tab === 'taxonomies'">
+					<pre>{{ site.taxonomies }}</pre>
+				</div>
+				<div v-else-if="$route.params.tab === 'attachment' && site.types.attachment">
+					
+					<div class="form-row mb-3">
+						<div class="col-3">
+							<input type="search" class="form-control" v-model="site.filters.search" placeholder="Search query">
+						</div>
+						<div class="col-3">
+							<select class="form-control" v-model="site.filters.media_type">
+								<option value="">Media Type</option>
+								<option value="image">Image</option>
+								<option value="video">Video</option>
+								<option value="application">Application</option>
+								<option value="text">Text</option>
+								<option value="audio">Audio</option>
+							</select>
+						</div>
+					</div>
+
 					<div class="row row-cols-1 row-cols-md-3 row-cols-lg-3">
 						<div v-for="media in site.types.attachment.items" :key="media.id" class="col my-2">
-							<div v-if="media.media_type === 'file' && media.mime_type.includes('video/')" class="card">
-								<div class="embed-responsive embed-responsive-16by9">
-									<video controls width="250" loading="lazy">
+							<div class="card">
+
+								<div v-if="media.media_type === 'file' && media.mime_type.includes('video/')" class="embed-responsive embed-responsive-16by9">
+									<video controls loading="lazy">
 										<source :src="media.source_url" :type="media.mime_type">
 										Sorry, your browser doesn't support embedded videos.
 									</video>
 								</div>
-								<div class="card-body">
-									<h6 class="card-title"><a :href="media.source_url" target="_blank" rel="noreferer">{{ media.title.rendered }}</a></h6>
+								<a v-else-if="media.media_type === 'image'" :href="media.source_url" target="_blank" rel="noreferer">
+									<img :src="media.media_details.sizes.full ? (media.media_details.sizes.medium || media.media_details.sizes.full).source_url : media.source_url" class="card-img-top" loading="lazy" :alt="media.title.rendered">
+								</a>
+
+								<div v-if="media.media_type === 'file' && media.mime_type.includes('video/')" class="card-body">
+									<h6 class="card-title"><a :href="media.source_url" target="_blank" rel="noreferer" v-html="media.title.rendered"></a></h6>
 									<p class="card-text">
-										<span class="badge badge-light-success mr-1">{{ media.mime_type }}</span>
 										<span class="badge badge-light-secondary mr-1">{{ media.media_details.length_formatted }}</span>
 										<span class="badge badge-light-secondary mr-1">{{ media.media_details.width || '-' }}x{{ media.media_details.height || '-' }}</span>
-										<span class="badge badge-light-secondary">{{ media.date }}</span>
 									</p>
 									<p class="card-text" v-html="media.caption.rendered"></p>
 								</div>
-							</div>
-							<div v-else-if="media.media_type === 'image'" class="card">
-								<a :href="media.source_url" target="_blank" rel="noreferer">
-									<img :src="media.media_details.sizes.full ? (media.media_details.sizes.medium || media.media_details.sizes.full).source_url : media.source_url" class="card-img-top" loading="lazy" :alt="media.title.rendered">
-								</a>
-								<div class="card-body">
+								<div v-else-if="media.media_type === 'file' && media.mime_type.includes('audio/')" class="card-body">
+									<audio controls :src="media.source_url" loading="lazy">
+										Sorry, your browser doesn't support embedded audio.
+									</audio>
 									<h6 class="card-title"><a :href="media.source_url" target="_blank" rel="noreferer">{{ media.title.rendered }}</a></h6>
 									<p class="card-text">
-										<span class="badge badge-light-info mr-1">{{ media.mime_type }}</span>
+										<span class="badge badge-light-secondary mr-1">{{ media.media_details.length_formatted }}</span>
+									</p>
+									<p class="card-text" v-html="media.caption.rendered"></p>
+								</div>
+								<div v-else-if="media.media_type === 'image'" class="card-body">
+									<h6 class="card-title"><a :href="media.source_url" target="_blank" rel="noreferer" v-html="media.title.rendered"></a></h6>
+									<p class="card-text mb-1">
 										<span class="badge badge-light-secondary mr-1">{{ media.media_details.width || '-' }}x{{ media.media_details.height || '-' }}</span>
 									</p>
-									<p class="card-text">{{ media.caption.rendered }}</p>
+									<div class="card-text" v-html="media.caption.rendered"></div>
 								</div>
-							</div>
-							<div v-else class="card">
-								<div class="card-body">
-									<h6 class="card-title">{{ media.title.rendered }}</h6>
-									<p class="card-text"><span class="badge badge-light-secondary">{{ media.media_type }}</span> {{ media.caption.rendered }}</p>
-									<p class="card-text"><a :href="media.guid.rendered" target="_blank" rel="noreferer">link</a></p>
+								<div v-else class="card-body">
+									<h6 class="card-title"><a :href="media.source_url" target="_blank" rel="noreferer">{{ media.title.rendered }}</a></h6>
+									<div class="card-text" v-html="media.caption.rendered"></div>
+									<p class="card-text"><a :href="media.guid.rendered" target="_blank" rel="noreferer">🔗 Link</a></p>
+								</div>
+
+								<div class="card-footer">
+									<p class="mb-1">
+										Date: {{ media.date }}
+									</p>
+									<p v-if="media.post" class="mb-1">
+										<a :href="`${site.info.home}/?p=${media.post}`" target="_blank" rel="noreferer">🔗 Linked post</a>
+									</p>
+									<p class="mb-1">
+										Type: <span class="badge badge-light-info">{{ media.mime_type }}</span>
+									</p>
+									<p class="mb-1">
+										Size: <span class="badge badge-light-secondary">{{ media.media_details.filesize ? bytesToSize(media.media_details.filesize) : '-' }}</span>
+									</p>
+									<p v-if="media._embedded && media._embedded.author && media._embedded.author.length" class="mb-1">
+										Author:
+										<a v-for="author in media._embedded.author" :key="author.id" v-show="author.id" :href="author.link" target="_blank" rel="noreferer"><img v-if="author.id && author.avatar_urls" :src="author.avatar_urls['24']" height="18" class="rounded-circle" :alt="author.name"> {{ author.name }}</a>
+									</p>
 								</div>
 							</div>
 						</div>
 					</div>
-					<p v-if="!site.types[$route.params.tab].total || site.types[$route.params.tab].items.length < site.types[$route.params.tab].total">
-						<button @click="load('attachment')" class="btn btn-sm btn-light">Load more</button>
-						<span v-if="site.types[$route.params.tab].state === 'loading'" class="spinner-border spinner-border-sm" role="status"></span>
-					</p>
+
+					<div v-if="site.types[$route.params.tab].state === 'idle' && !site.types[$route.params.tab].items.length" class="alert alert-info text-center">
+						<strong>Oops,</strong> looks there aren't any items to display. Try changing the filters
+					</div>
+
 					<div v-if="site.types[$route.params.tab].error" class="alert alert-danger">
 						{{ site.types[$route.params.tab].error }}
 					</div>
+
+					<div v-if="site.types[$route.params.tab].state === 'loading'" class="spinner-border spinner-border-sm ml-1" role="status"></div>
+
+					<div class="bg-white rounded p-2 my-3">
+						<div class="row">
+							<div class="col-auto">
+								<strong>{{ site.types[$route.params.tab].total }}</strong> items over <strong>{{ site.types[$route.params.tab].totalPages }}</strong> pages
+							</div>
+							<div class="col">
+								<ul class="pagination pagination-sm">
+									<li v-for="page in Array(site.types[$route.params.tab].totalPages).keys()" :key="page" class="page-item" :class="{active: page + 1 == site.types[$route.params.tab].page}"><button class="page-link" @click="site.types[$route.params.tab].page = page + 1; load($route.params.tab)">{{ page + 1 }}</button></li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
 				</div>
 				<div v-else-if="$route.params.tab && site.types[$route.params.tab]">
 
-					<div class="bg-white rounded p-2 mb-3">
-						<strong>{{ site.types[$route.params.tab].total }}</strong> items over <strong>{{ site.types[$route.params.tab].totalPages }}</strong> pages
+					<div class="form-row mb-3">
+						<div class="col-3">
+							<input type="search" class="form-control" v-model="site.filters.search" placeholder="Search query">
+						</div>
+						<div v-for="taxonomy in site.taxonomies" :key="taxonomy.slug" v-show="taxonomy.types.includes($route.params.tab)" class="col-3">
+							<select class="form-control" v-model="site.filters[taxonomy.rest_base]">
+								<option value="">{{ taxonomy.name }}</option>
+								<option v-for="term in taxonomy.items" :key="term.id" :value="term.id">{{ term.name }} ({{ term.count }})</option>
+							</select>
+						</div>
 					</div>
 
-					<div class="row row-cols-1 row-cols-md-3">
+					<div class="row row-cols-1 row-cols-md-3 mb-3">
 						<div v-for="item in site.types[$route.params.tab].items" :key="item.id" class="col my-2">
 							<div class="card h-100">
-								<a v-if="item._embedded['wp:featuredmedia'] && item._embedded['wp:featuredmedia'].length" :href="item.link" target="_blank" rel="noreferer">
+								<a v-if="item._embedded && item._embedded['wp:featuredmedia'] && item._embedded['wp:featuredmedia'].length" :href="item.link" target="_blank" rel="noreferer">
 									<img :src="item._embedded['wp:featuredmedia'][0].source_url" class="card-img-top" loading="lazy" :alt="item._embedded['wp:featuredmedia'][0].alt_text">
 								</a>
 								<div class="card-body">
 									<h6 class="card-title"><a :href="item.link" target="_blank" rel="noreferer" v-html="item.title.rendered"></a></h6>
-									<div class="card-text" v-html="item.excerpt.rendered"></div>
+									<div class="card-text" v-html="(item.excerpt || item.content).rendered"></div>
 								</div>
 								<div class="card-footer">
 									<p class="mb-1">
 										Date: {{ item.date }}
 									</p>
-									<p v-if="item._embedded.author && item._embedded.author.length" class="mb-1">
+									<p v-if="item._embedded && item._embedded.author && item._embedded.author.length" class="mb-1">
 										Author:
-										<a v-for="author in item._embedded.author" :key="author.id" v-show="author.id" :href="author.link" target="_blank" rel="noreferer"><img v-if="author.id" :src="author.avatar_urls['24']" height="18" class="rounded-circle" :alt="author.name"> {{ author.name }}</a>
+										<a v-for="author in item._embedded.author" :key="author.id" v-show="author.id" :href="author.link" target="_blank" rel="noreferer"><img v-if="author.id && author.avatar_urls" :src="author.avatar_urls['24']" height="18" class="rounded-circle" :alt="author.name"> {{ author.name }}</a>
 									</p>
-									<div v-if="item._embedded['wp:term'] && item._embedded['wp:term'].length">
+									<div v-if="item._embedded && item._embedded['wp:term'] && item._embedded['wp:term'].length">
 										<p v-for="(taxonomy, index) in item._embedded['wp:term']" :key="index" class="mb-1">
 											<span v-if="taxonomy.length" class="text-capitalize">{{ taxonomy[0].taxonomy }}: </span>
 											<a v-for="term in taxonomy" :key="term.id" :href="term.link" class="mr-1" target="_blank" rel="noreferer">{{ term.name }}</a>
@@ -119,16 +193,29 @@
 						</div>
 					</div>
 
-					<ul>
-						<li v-for="item in site.types[$route.params.tab].items" :key="item.id"><a :href="item.link" v-html="item.title.rendered" target="_blank" rel="noreferer"></a> <span class="badge badge-light-secondary">{{ item.date }}</span></li>
-					</ul>
-					<p v-if="!site.types[$route.params.tab].total || site.types[$route.params.tab].items.length < site.types[$route.params.tab].total">
-						<button @click="load($route.params.tab)" class="btn btn-sm btn-light">Load more</button>
-						<span v-if="site.types[$route.params.tab].state === 'loading'" class="spinner-border spinner-border-sm ml-1" role="status"></span>
-					</p>
+					<div v-if="site.types[$route.params.tab].state === 'idle' && !site.types[$route.params.tab].items.length" class="alert alert-info text-center">
+						<strong>Oops,</strong> looks there aren't any items to display. Try changing the filters
+					</div>
+
 					<div v-if="site.types[$route.params.tab].error" class="alert alert-danger">
 						{{ site.types[$route.params.tab].error }}
 					</div>
+
+					<div v-if="site.types[$route.params.tab].state === 'loading'" class="spinner-border spinner-border-sm ml-1" role="status"></div>
+
+					<div class="bg-white rounded p-2 my-3">
+						<div class="row">
+							<div class="col-auto">
+								<strong>{{ site.types[$route.params.tab].total }}</strong> items over <strong>{{ site.types[$route.params.tab].totalPages }}</strong> pages
+							</div>
+							<div class="col">
+								<ul class="pagination pagination-sm">
+									<li v-for="page in Array(site.types[$route.params.tab].totalPages).keys()" :key="page" class="page-item" :class="{active: page + 1 == site.types[$route.params.tab].page}"><button class="page-link" @click="site.types[$route.params.tab].page = page + 1; load($route.params.tab)">{{ page + 1 }}</button></li>
+								</ul>
+							</div>
+						</div>
+					</div>
+					
 				</div>
 				<div v-else>
 					<table class="table">
@@ -173,6 +260,7 @@
 // @ is an alias to /src
 // import HelloWorld from '@/components/HelloWorld.vue'
 
+import { debounce } from 'vue-debounce'
 import axios from 'axios'
 
 export default {
@@ -189,6 +277,11 @@ export default {
 			apiUrl: '',
 			site: {
 				info: null,
+				taxonomies: {},
+				filters: {
+					search: '',
+					media_type: '',
+				},
 				types: {},
 				error: '',
 			},
@@ -207,15 +300,32 @@ export default {
 			this.state = 'loading'
 			this.site.error = ''
 
+			url = url.trim()
+
 			if (!url.startsWith('http://') && !url.startsWith('https://')) {
 				// TODO which is better?
 				url = `https://${url}`
 			}
 
-			url = new URL(url)
+			try {
+				url = new URL(url)
+			} catch (error) {
+				this.state = 'error'
+				this.site.error = error.message
+				return
+			}
 
 			if (url.host !== this.$route.params.host) {
-				this.$router.push({ name: 'Home', params: { host: url.host, tab: this.$route.params.tab } })
+				let params = {
+					host: url.host,
+				}
+
+				// if loading a new website, go to Overview tab
+				if (this.$route.params.host === url.host) {
+					params.tab = this.$route.params.tab
+				}
+
+				this.$router.push({ name: 'Home', params })
 			}
 
 			this.site.apiUrl = `${url.origin}/wp-json`
@@ -245,6 +355,21 @@ export default {
 					}
 				})
 
+				this.apiRequest('/wp/v2/taxonomies').then(({ data }) => {
+					for (const taxonomy in data) {
+						const restBase = data[taxonomy].rest_base
+
+						data[taxonomy].items = []
+						this.$set(this.site.filters, restBase, '')
+
+						this.apiRequest(`/wp/v2/${data[taxonomy].rest_base}`, { params: { per_page: 100 } }).then((re) => {
+							data[taxonomy].items.push(...re.data)
+						})
+					}
+
+					this.site.taxonomies = data
+				})
+
 				this.state = 'idle'
 			}, error => {
 				this.state = 'error'
@@ -261,20 +386,25 @@ export default {
 			const t = this.site.types[type]
 			t.state = 'loading'
 			t.error = null
+			t.items = []
 
 			let params = {
 				per_page: this.perPage,
-				page: t.page++,
+				page: t.page,
 				_embed: 1,
 			}
 
-			if (type === 'attachment') {
-				//params.media_type = 'video'
+			for (const filter in this.site.filters) {
+				const val = this.site.filters[filter]
+
+				if (val && val !== '') {
+					params[filter] = this.site.filters[filter]
+				}
 			}
 
 			this.apiRequest(`/wp/v2/${t.rest_base}`, { params }).then(({ data, headers }) => {
 				t.total = headers['x-wp-total'] || 0
-				t.totalPages = headers['x-wp-totalpages'] || 0
+				t.totalPages = parseInt(headers['x-wp-totalpages'] || 0, 10)
 
 				t.items.push(...data)
 				t.state = 'idle'
@@ -284,6 +414,12 @@ export default {
 				console.log('error', error)
 			})
 		}, 350),
+		bytesToSize(bytes) {
+			var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+			if (bytes == 0) return '0 Byte';
+			var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+			return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+		}
 	},
 	watch: {
 		q(q, queryOld) {
@@ -293,15 +429,28 @@ export default {
 				return
 			}
 
-			// TODO add debounce
-
 			this.loadWpApi(q)
 		},
 		$route(route, routeOld) {
 			console.log(route.params, routeOld.params)
 
-			if (route.params.tab && this.site.types[route.params.tab] && this.site.types[route.params.tab].page === 1) {
+			if (route.params.tab && route.params.tab !== routeOld.params.tab && this.site.types[route.params.tab]) {
+				this.site.types[route.params.tab].page = 1
+				for (const slug in this.site.filters) {
+					this.site.filters[slug] = ''
+				}
+
 				this.load(route.params.tab)
+			}
+
+			if (route.params.tab && this.site.types[route.params.tab] && this.site.types[route.params.tab].page === 1) {
+				//this.load(route.params.tab)
+			}
+		},
+		'site.filters': {
+			deep: true,
+			handler() {
+				this.load(this.$route.params.tab)
 			}
 		}
 	}
