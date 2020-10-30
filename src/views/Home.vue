@@ -261,6 +261,7 @@ export default {
 				types: {},
 				error: '',
 			},
+			reqCancelToken: null,
 		}
 	},
 	created() {
@@ -272,7 +273,7 @@ export default {
 		document.querySelector('.wp-url').focus()
 	},
 	methods: {
-		loadWpApi(url) {
+		loadWpApi: debounce(function(url) {
 			this.state = 'loading'
 			this.site.error = ''
 
@@ -351,7 +352,7 @@ export default {
 				this.state = 'error'
 				this.site.error = error.message
 			})
-		},
+		}, 250),
 		apiRequest(path, data) {
 			path = path || ''
 			data = data || {}
@@ -359,6 +360,10 @@ export default {
 			return axios.get(`${this.site.apiUrl}${path}`, data)
 		},
 		load: debounce(function(type) {
+			if (!type) {
+				return
+			}
+
 			const t = this.site.types[type]
 			t.state = 'loading'
 			t.error = null
@@ -378,7 +383,23 @@ export default {
 				}
 			}
 
-			this.apiRequest(`/wp/v2/${t.rest_base}`, { params }).then(({ data, headers }) => {
+			// cancel previous request, if started
+			if (this.reqCancelToken) {
+				this.reqCancelToken.cancel()
+			}
+
+			// create an about signal
+			this.reqCancelToken = axios.CancelToken.source()
+
+			this.apiRequest(`/wp/v2/${t.rest_base}`, {
+				cancelToken: this.reqCancelToken.token,
+				params,
+			}).then(({ data, headers }) => {
+				// store total number of items, not including filters
+				if (!t.totalTotal || headers['x-wp-total'] > t.totalTotal) {
+					t.totalTotal = headers['x-wp-total'] || 0
+				}
+
 				t.total = headers['x-wp-total'] || 0
 				t.totalPages = parseInt(headers['x-wp-totalpages'] || 0, 10)
 
