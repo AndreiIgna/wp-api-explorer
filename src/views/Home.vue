@@ -11,7 +11,7 @@
 			</div>
 		</section>
 
-		<div class="container my-5">
+		<div class="container my-3">
 			<div v-if="state === 'loading'">
 				<div class="spinner-border text-primary" role="status">
 					<span class="sr-only">Loading...</span>
@@ -34,7 +34,7 @@
 					</li>
 					-->
 					<li v-for="type in site.types" :key="type.slug" class="nav-item">
-						<router-link :to="`/${$route.params.host}/${type.slug}`" class="nav-link" :class="{active: $route.params.tab === type.slug}">{{ type.name }} <span v-if="type.total" class="badge badge-light-secondary badge-pill">{{ type.total }}</span></router-link>
+						<router-link :to="`/${$route.params.host}/${type.slug}`" class="nav-link" :class="{active: $route.params.tab === type.slug}">{{ type.name }} <span v-if="type.totalTotal" class="badge badge-light-secondary badge-pill">{{ type.totalTotal }}</span></router-link>
 					</li>
 				</ul>
 
@@ -69,55 +69,34 @@
 										Sorry, your browser doesn't support embedded videos.
 									</video>
 								</div>
+								<audio v-else-if="media.media_type === 'file' && media.mime_type.includes('audio/')" controls :src="media.source_url" loading="lazy">
+									Sorry, your browser doesn't support embedded audio.
+								</audio>
 								<a v-else-if="media.media_type === 'image'" :href="media.source_url" target="_blank" rel="noreferer">
 									<img :src="media.media_details.sizes.full ? (media.media_details.sizes.medium || media.media_details.sizes.full).source_url : media.source_url" class="card-img-top" loading="lazy" :alt="media.title.rendered">
 								</a>
 
-								<div v-if="media.media_type === 'file' && media.mime_type.includes('video/')" class="card-body">
+								<div class="card-body">
+									<p>
+										<span class="badge badge-light-info mr-1">{{ media.mime_type }}</span>
+										<span v-if="media.media_details.length_formatted" class="badge badge-light-secondary mr-1">{{ media.media_details.length_formatted }}</span>
+										<span v-if="media.media_details.width" class="badge badge-light-secondary mr-1">{{ media.media_details.width || '-' }}x{{ media.media_details.height || '-' }}</span>
+										<span v-if="media.media_details.filesize" class="badge badge-light-secondary mr-1">{{ bytesToSize(media.media_details.filesize) }}</span>
+									</p>
 									<h6 class="card-title"><a :href="media.source_url" target="_blank" rel="noreferer" v-html="media.title.rendered"></a></h6>
-									<p class="card-text">
-										<span class="badge badge-light-secondary mr-1">{{ media.media_details.length_formatted }}</span>
-										<span class="badge badge-light-secondary mr-1">{{ media.media_details.width || '-' }}x{{ media.media_details.height || '-' }}</span>
-									</p>
-									<p class="card-text" v-html="media.caption.rendered"></p>
-								</div>
-								<div v-else-if="media.media_type === 'file' && media.mime_type.includes('audio/')" class="card-body">
-									<audio controls :src="media.source_url" loading="lazy">
-										Sorry, your browser doesn't support embedded audio.
-									</audio>
-									<h6 class="card-title"><a :href="media.source_url" target="_blank" rel="noreferer">{{ media.title.rendered }}</a></h6>
-									<p class="card-text">
-										<span class="badge badge-light-secondary mr-1">{{ media.media_details.length_formatted }}</span>
-									</p>
-									<p class="card-text" v-html="media.caption.rendered"></p>
-								</div>
-								<div v-else-if="media.media_type === 'image'" class="card-body">
-									<h6 class="card-title"><a :href="media.source_url" target="_blank" rel="noreferer" v-html="media.title.rendered"></a></h6>
-									<p class="card-text mb-1">
-										<span class="badge badge-light-secondary mr-1">{{ media.media_details.width || '-' }}x{{ media.media_details.height || '-' }}</span>
-									</p>
 									<div class="card-text" v-html="media.caption.rendered"></div>
-								</div>
-								<div v-else class="card-body">
-									<h6 class="card-title"><a :href="media.source_url" target="_blank" rel="noreferer">{{ media.title.rendered }}</a></h6>
-									<div class="card-text" v-html="media.caption.rendered"></div>
-									<p class="card-text"><a :href="media.guid.rendered" target="_blank" rel="noreferer">🔗 Link</a></p>
+
+									<p class="card-text mb-0">
+										<a :href="media.guid.rendered" target="_blank" rel="noreferer" class="mr-2">📄 File link</a>
+										<a v-if="media.post" :href="`${site.info.home}/?p=${media.post}`" target="_blank" rel="noreferer">🔗 Linked post</a>
+									</p>
 								</div>
 
 								<div class="card-footer">
 									<p class="mb-1">
-										Date: {{ media.date }}
+										Date: {{ new Date(media.date).toLocaleString() }}
 									</p>
-									<p v-if="media.post" class="mb-1">
-										<a :href="`${site.info.home}/?p=${media.post}`" target="_blank" rel="noreferer">🔗 Linked post</a>
-									</p>
-									<p class="mb-1">
-										Type: <span class="badge badge-light-info">{{ media.mime_type }}</span>
-									</p>
-									<p class="mb-1">
-										Size: <span class="badge badge-light-secondary">{{ media.media_details.filesize ? bytesToSize(media.media_details.filesize) : '-' }}</span>
-									</p>
-									<p v-if="media._embedded && media._embedded.author && media._embedded.author.length" class="mb-1">
+									<p v-if="media._embedded && media._embedded.author && media._embedded.author.length" class="mb-0">
 										Author:
 										<a v-for="author in media._embedded.author" :key="author.id" v-show="author.id" :href="author.link" target="_blank" rel="noreferer"><img v-if="author.id && author.avatar_urls" :src="author.avatar_urls['24']" height="18" class="rounded-circle" :alt="author.name"> {{ author.name }}</a>
 									</p>
@@ -136,14 +115,14 @@
 
 					<div v-if="site.types[$route.params.tab].state === 'loading'" class="spinner-border spinner-border-sm ml-1" role="status"></div>
 
-					<div class="bg-white rounded p-2 my-3">
-						<div class="row">
-							<div class="col-auto">
+					<div v-if="site.types[$route.params.tab].totalPages" class="bg-white rounded p-2 my-3">
+						<div class="row align-items-center">
+							<div class="col">
 								<strong>{{ site.types[$route.params.tab].total }}</strong> items over <strong>{{ site.types[$route.params.tab].totalPages }}</strong> pages
 							</div>
-							<div class="col">
-								<ul class="pagination pagination-sm">
-									<li v-for="page in Array(site.types[$route.params.tab].totalPages).keys()" :key="page" class="page-item" :class="{active: page + 1 == site.types[$route.params.tab].page}"><button class="page-link" @click="site.types[$route.params.tab].page = page + 1; load($route.params.tab)">{{ page + 1 }}</button></li>
+							<div class="col-auto">
+								<ul class="pagination pagination-sm mb-0">
+									<li v-for="page in Math.min(site.types[$route.params.tab].totalPages || 1, 25)" :key="page" class="page-item" :class="{active: page == site.types[$route.params.tab].page}"><button class="page-link" @click="site.types[$route.params.tab].page = page; load($route.params.tab)">{{ page }}</button></li>
 								</ul>
 							</div>
 						</div>
@@ -172,11 +151,11 @@
 								</a>
 								<div class="card-body">
 									<h6 class="card-title"><a :href="item.link" target="_blank" rel="noreferer" v-html="item.title.rendered"></a></h6>
-									<div class="card-text" v-html="(item.excerpt || item.content).rendered"></div>
+									<div v-if="item.excerpt || item.content" class="card-text" v-html="(item.excerpt || item.content).rendered"></div>
 								</div>
 								<div class="card-footer">
 									<p class="mb-1">
-										Date: {{ item.date }}
+										Date: {{ new Date(item.date).toLocaleString() }}
 									</p>
 									<p v-if="item._embedded && item._embedded.author && item._embedded.author.length" class="mb-1">
 										Author:
@@ -203,14 +182,14 @@
 
 					<div v-if="site.types[$route.params.tab].state === 'loading'" class="spinner-border spinner-border-sm ml-1" role="status"></div>
 
-					<div class="bg-white rounded p-2 my-3">
-						<div class="row">
-							<div class="col-auto">
+					<div v-if="site.types[$route.params.tab].totalPages" class="bg-white rounded p-2 my-3">
+						<div class="row align-items-center">
+							<div class="col">
 								<strong>{{ site.types[$route.params.tab].total }}</strong> items over <strong>{{ site.types[$route.params.tab].totalPages }}</strong> pages
 							</div>
-							<div class="col">
-								<ul class="pagination pagination-sm">
-									<li v-for="page in Array(site.types[$route.params.tab].totalPages).keys()" :key="page" class="page-item" :class="{active: page + 1 == site.types[$route.params.tab].page}"><button class="page-link" @click="site.types[$route.params.tab].page = page + 1; load($route.params.tab)">{{ page + 1 }}</button></li>
+							<div class="col-auto">
+								<ul class="pagination pagination-sm mb-0">
+									<li v-for="page in Math.min(site.types[$route.params.tab].totalPages || 1, 25)" :key="page" class="page-item" :class="{active: page == site.types[$route.params.tab].page}"><button class="page-link" @click="site.types[$route.params.tab].page = page; load($route.params.tab)">{{ page }}</button></li>
 								</ul>
 							</div>
 						</div>
@@ -257,9 +236,6 @@
 </template>
 
 <script>
-// @ is an alias to /src
-// import HelloWorld from '@/components/HelloWorld.vue'
-
 import { debounce } from 'vue-debounce'
 import axios from 'axios'
 
