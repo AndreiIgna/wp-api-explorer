@@ -59,7 +59,7 @@
 						</div>
 					</div>
 
-					<div class="row row-cols-1 row-cols-md-3 row-cols-lg-3">
+					<div class="row row-cols-1 row-cols-md-2" :class="{'row-cols-md-3': site.filters.media_type !== 'video'}">
 						<div v-for="media in site.types.attachment.items" :key="media.id" class="col my-2">
 							<div class="card">
 
@@ -231,13 +231,14 @@
 			</div>
 		</div>
 
-
+		<p class="text-right"><button class="btn btn-link" @click="useProxy = !useProxy"><small>{{ useProxy ? 'Don\'t use proxy' : 'Use proxy' }}</small></button></p>
 	</div>
 </template>
 
 <script>
 import { debounce } from 'vue-debounce'
 import axios from 'axios'
+import jQuery from 'jquery'
 
 export default {
 	name: 'Home',
@@ -262,6 +263,7 @@ export default {
 				error: '',
 			},
 			reqCancelToken: null,
+			useProxy: false,
 		}
 	},
 	created() {
@@ -339,7 +341,7 @@ export default {
 						data[taxonomy].items = []
 						this.$set(this.site.filters, restBase, '')
 
-						this.apiRequest(`/wp/v2/${data[taxonomy].rest_base}`, { params: { per_page: 100 } }).then((re) => {
+						this.apiRequest(`/wp/v2/${data[taxonomy].rest_base}?per_page=100`).then((re) => {
 							data[taxonomy].items.push(...re.data)
 						})
 					}
@@ -357,7 +359,14 @@ export default {
 			path = path || ''
 			data = data || {}
 
-			return axios.get(`${this.site.apiUrl}${path}`, data)
+			let url = `${this.site.apiUrl}${path}`
+
+			// to bypass unallowed Origin
+			if (this.useProxy) {
+				url = `https://url-proxy.layered.workers.dev/?url=${encodeURIComponent(url)}`
+			}
+
+			return axios.get(url, data)
 		},
 		load: debounce(function(type) {
 			if (!type) {
@@ -391,9 +400,8 @@ export default {
 			// create an about signal
 			this.reqCancelToken = axios.CancelToken.source()
 
-			this.apiRequest(`/wp/v2/${t.rest_base}`, {
+			this.apiRequest(`/wp/v2/${t.rest_base}?${jQuery.param(params)}`, {
 				cancelToken: this.reqCancelToken.token,
-				params,
 			}).then(({ data, headers }) => {
 				// store total number of items, not including filters
 				if (!t.totalTotal || headers['x-wp-total'] > t.totalTotal) {
