@@ -146,11 +146,11 @@
 					<div class="row row-cols-1 row-cols-md-3 mb-3">
 						<div v-for="item in site.types[$route.params.tab].items" :key="item.id" class="col my-2">
 							<div class="card h-100">
-								<a v-if="item._embedded && item._embedded['wp:featuredmedia'] && item._embedded['wp:featuredmedia'].length" :href="item.link" target="_blank" rel="noreferer">
+								<a v-if="item._embedded && item._embedded['wp:featuredmedia'] && item._embedded['wp:featuredmedia'].length" :href="item.link" target="_blank" @click.prevent="openPost(item)" rel="noreferer">
 									<img :src="item._embedded['wp:featuredmedia'][0].source_url" class="card-img-top" loading="lazy" :alt="item._embedded['wp:featuredmedia'][0].alt_text">
 								</a>
 								<div class="card-body">
-									<h6 class="card-title"><a :href="item.link" target="_blank" rel="noreferer" v-html="item.title.rendered"></a></h6>
+									<h6 class="card-title"><a :href="item.link" target="_blank" rel="noreferer" @click.prevent="openPost(item)" v-html="item.title.rendered"></a></h6>
 									<div v-if="item.excerpt || item.content" class="card-text" v-html="(item.excerpt || item.content).rendered"></div>
 								</div>
 								<div class="card-footer">
@@ -232,13 +232,47 @@
 		</div>
 
 		<p class="text-right"><button class="btn btn-link" @click="useProxy = !useProxy"><small>{{ useProxy ? 'Don\'t use proxy' : 'Use proxy' }}</small></button></p>
+
+		<div class="modal fade" id="modal-post" tabindex="-1" aria-labelledby="modal-post-title" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div v-if="currentPost" class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="modal-post-title" v-html="currentPost.title.rendered"></h5>
+						<a :href="currentPost.link" target="_blank"><small class="text-muted">Open on site ❐</small></a>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+					</div>
+					<div class="modal-body">
+						<img v-if="currentPost._embedded && currentPost._embedded['wp:featuredmedia'] && currentPost._embedded['wp:featuredmedia'].length" :src="currentPost._embedded['wp:featuredmedia'][0].source_url" loading="lazy" class="img-fluid mb-3" :alt="currentPost._embedded['wp:featuredmedia'][0].alt_text">
+						<div v-html="currentPost.content.rendered"></div>
+					</div>
+					<div class="modal-footer">
+						<p class="mb-1">
+							Date: {{ new Date(currentPost.date).toLocaleString() }}
+						</p>
+						<p v-if="currentPost._embedded && currentPost._embedded.author && currentPost._embedded.author.length" class="mb-1">
+							Author:
+							<a v-for="author in currentPost._embedded.author" :key="author.id" v-show="author.id" :href="author.link" target="_blank" rel="noreferer"><img v-if="author.id && author.avatar_urls" :src="author.avatar_urls['24']" height="18" class="rounded-circle" :alt="author.name"> {{ author.name }}</a>
+						</p>
+						<div v-if="currentPost._embedded && currentPost._embedded['wp:term'] && currentPost._embedded['wp:term'].length">
+							<p v-for="(taxonomy, index) in currentPost._embedded['wp:term']" :key="index" class="mb-1">
+								<span v-if="taxonomy.length" class="text-capitalize">{{ taxonomy[0].taxonomy }}: </span>
+								<a v-for="term in taxonomy" :key="term.id" :href="term.link" class="mr-1" target="_blank" rel="noreferer">{{ term.name }}</a>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </template>
 
 <script>
 import { debounce } from 'vue-debounce'
 import axios from 'axios'
+import bootstrap from 'bootstrap'
 import jQuery from 'jquery'
+
+bootstrap
 
 export default {
 	name: 'Home',
@@ -264,6 +298,7 @@ export default {
 			},
 			reqCancelToken: null,
 			useProxy: false,
+			currentPost: null,
 		}
 	},
 	created() {
@@ -424,7 +459,11 @@ export default {
 			if (bytes == 0) return '0 Byte';
 			var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
 			return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
-		}
+		},
+		openPost(post) {
+			this.currentPost = post
+			jQuery('#modal-post').modal('show')
+		},
 	},
 	watch: {
 		q(q, queryOld) {
