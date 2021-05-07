@@ -18,14 +18,12 @@
 		</section>
 
 		<div class="container my-3">
-			<div v-if="state === 'loading'">
-				<div class="spinner-border text-primary" role="status">
-					<span class="sr-only">Loading...</span>
-				</div>
+			<div v-if="state === 'loading'" class="text-center py-3">
+				<div class="spinner-border text-primary" role="status"></div> Loading WordPress REST API..
 			</div>
 			<div v-if="state === 'error'">
 				<div class="alert alert-danger">
-					<strong>Oops.</strong> Probably this is not a WordPress site. ({{ this.site.error }})
+					⚠️ Oops, probably this is not a WordPress site. ({{ this.site.error }})
 				</div>
 			</div>
 			<div v-if="state === 'idle'">
@@ -119,7 +117,9 @@
 						{{ site.types[$route.params.tab].error }}
 					</div>
 
-					<div v-if="site.types[$route.params.tab].state === 'loading'" class="spinner-border spinner-border-sm ml-1" role="status"></div>
+					<div v-if="site.types[$route.params.tab].state === 'loading'" class="text-center py-3">
+						<div class="spinner-border spinner-border-sm" role="status"></div> Loading media files
+					</div>
 
 					<div v-if="site.types[$route.params.tab].totalPages" class="bg-white rounded p-2 my-3">
 						<div class="row align-items-center">
@@ -186,7 +186,9 @@
 						{{ site.types[$route.params.tab].error }}
 					</div>
 
-					<div v-if="site.types[$route.params.tab].state === 'loading'" class="spinner-border spinner-border-sm ml-1" role="status"></div>
+					<div v-if="site.types[$route.params.tab].state === 'loading'" class="text-center py-3">
+						<div class="spinner-border spinner-border-sm" role="status"></div> Loading data
+					</div>
 
 					<div v-if="site.types[$route.params.tab].totalPages" class="bg-white rounded p-2 my-3">
 						<div class="row align-items-center">
@@ -242,7 +244,7 @@
 				<div v-if="currentPost" class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title" id="modal-post-title" v-html="currentPost.title.rendered"></h5>
-						<a :href="currentPost.link" target="_blank"><small class="text-muted">Open on site ❐</small></a>
+						<a :href="currentPost.link" class="ml-3" target="_blank"><small class="text-muted">Open site page ❐</small></a>
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
 					</div>
 					<div class="modal-body">
@@ -321,7 +323,7 @@ export default {
 			url = url.trim()
 
 			if (!url.startsWith('http://') && !url.startsWith('https://')) {
-				// TODO which is better?
+				// TODO which is better? http or https
 				url = `https://${url}`
 			}
 
@@ -400,7 +402,7 @@ export default {
 
 			let url = `${this.site.apiUrl}${path}`
 
-			// to bypass unallowed Origin
+			// Use proxy to bypass unallowed Origin
 			if (this.useProxy) {
 				url = `https://url-proxy.layered.workers.dev/?url=${encodeURIComponent(url)}`
 			}
@@ -482,8 +484,11 @@ export default {
 		$route(route, routeOld) {
 			console.log(route.params, routeOld.params)
 
+			// switch tabs: overview, posts, media, etc.
 			if (route.params.tab && route.params.tab !== routeOld.params.tab && this.site.types[route.params.tab]) {
 				this.site.types[route.params.tab].page = 1
+
+				// reset filters
 				for (const slug in this.site.filters) {
 					this.site.filters[slug] = ''
 				}
