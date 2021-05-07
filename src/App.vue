@@ -14,7 +14,7 @@
 
         <ul class="navbar-nav ml-auto">
           <li class="nav-item ml-4">
-            <a class="nav-link" href="https://github.com/AndreiIgna/wp-api-explorer">Docs</a>
+            <a class="nav-link" href="https://github.com/AndreiIgna/wp-api-explorer#readme">Docs</a>
           </li><li class="nav-item ml-4">
             <a class="nav-link" href="https://github.com/AndreiIgna/wp-api-explorer">GitHub</a>
           </li>
@@ -26,11 +26,6 @@
       <router-view/>
     </div>
 
-    <footer class="site-footer py-2 text-center">
-      <div class="container">
-        <small class="text-muted">Please secure your site</small>
-      </div>
-    </footer>
   </div>
 </template>
 
