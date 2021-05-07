@@ -3,9 +3,15 @@
 		<section class="page-head">
 			<div class="container text-center py-4">
 				<h3 class="mb-3">Url of any WordPress site</h3>
-				<div class="row justify-content-center">
-					<div class="col-7">
+				<div class="row justify-content-center align-items-center">
+					<div class="col-lg-7">
 						<input type="url" class="form-control form-control-lg wp-url" v-model="q" placeholder="Ex: https://ma.tt/">
+					</div>
+					<div class="col-auto">
+						<div class="custom-control custom-switch my-2">
+							<input type="checkbox" class="custom-control-input" id="api-use-proxy" v-model="useProxy">
+							<label class="custom-control-label" for="api-use-proxy">Use proxy</label>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -230,8 +236,6 @@
 				</div>
 			</div>
 		</div>
-
-		<p class="text-right"><button class="btn btn-link" @click="useProxy = !useProxy"><small>{{ useProxy ? 'Don\'t use proxy' : 'Use proxy' }}</small></button></p>
 
 		<div class="modal fade" id="modal-post" tabindex="-1" aria-labelledby="modal-post-title" aria-hidden="true">
 			<div class="modal-dialog modal-lg">
