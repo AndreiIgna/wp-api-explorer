@@ -48,10 +48,10 @@
 				<div v-else-if="$route.params.tab === 'attachment' && site.types.attachment">
 					
 					<div class="form-row mb-3">
-						<div class="col-3">
+						<div class="col-4 col-lg-3">
 							<input type="search" class="form-control" v-model="site.filters.search" placeholder="Search query">
 						</div>
-						<div class="col-3">
+						<div class="col-4 col-lg-3">
 							<select class="form-control" v-model="site.filters.media_type">
 								<option value="">Media Type</option>
 								<option value="image">Image</option>
@@ -138,10 +138,10 @@
 				<div v-else-if="$route.params.tab && site.types[$route.params.tab]">
 
 					<div class="form-row mb-3">
-						<div class="col-3">
+						<div class="col-4 col-lg-3">
 							<input type="search" class="form-control" v-model="site.filters.search" placeholder="Search query">
 						</div>
-						<div v-for="taxonomy in site.taxonomies" :key="taxonomy.slug" v-show="taxonomy.types.includes($route.params.tab)" class="col-3">
+						<div v-for="taxonomy in site.taxonomies" :key="taxonomy.slug" v-show="taxonomy.types.includes($route.params.tab)" class="col-4 col-lg-3">
 							<select class="form-control" v-model="site.filters[taxonomy.rest_base]">
 								<option value="">{{ taxonomy.name }}</option>
 								<option v-for="term in taxonomy.items" :key="term.id" :value="term.id">{{ term.name }} ({{ term.count }})</option>
