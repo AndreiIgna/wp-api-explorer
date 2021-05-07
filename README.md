@@ -1,29 +1,26 @@
-# wp-api-explorer
+# WordPress API explorer
 
-## Project setup
-```
-npm install
-```
+Minimal UI built with [Vue.js](https://vuejs.org/) to debug & check security for WordPress sites.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+There are may sites that "restrict" content or files behind payment or user roles, but that content or files are still accessible through WordPress API.
 
-### Compiles and minifies for production
-```
-npm run build
-```
+→ [**WordPress API explorer**](https://wp-api-explorer.pages.dev/)
 
-### Lints and fixes files
-```
-npm run lint
-```
+## Highlights
+- Uses [WordPress REST API](https://developer.wordpress.org/rest-api/) to auto-discover all posts types & content
+- Lists all content with pagination
+- Displays all media (documents, images, videos, etc)
 
-### Upload /dist to Github pages
-```
-git subtree push --prefix dist origin gh-pages
-```
+## Development
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+- clone the repo
+- run `npm install` to install all dependencies
+- run `npm run serve` to start a local dev server
+- make changes 😀
+- create a Pull Request with updated code
+
+### More
+
+Please report any issues here on GitHub.
+
+[Any contributions are welcome](CONTRIBUTING.md)
