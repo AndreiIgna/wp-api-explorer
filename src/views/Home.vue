@@ -285,10 +285,9 @@ export default {
 	components: {
 		// HelloWorld
 	},
-	props: ['query'],
 	data() {
 		return {
-			q: this.query || '',
+			q: '',
 			state: 'waiting',
 			perPage: 100,
 			apiUrl: '',
@@ -350,52 +349,51 @@ export default {
 
 			this.site.apiUrl = `${url.origin}/wp-json`
 
-			this.apiRequest().then(({ data, headers }) => {
-				this.site.apiUrl = data.home + '/wp-json'
-				this.site.info = data
-
-				console.log(headers)
-				console.log(data)
-
-				this.apiRequest('/wp/v2/types').then(({ data }) => {
-
-					for (const type in data) {
-						data[type].total = 0
-						data[type].totalPages = 0
-						data[type].page = 1
-						data[type].items = []
-						data[type].state = 'idle'
-						data[type].error = null
-					}
-
-					this.site.types = data
-
-					if (this.$route.params.tab && data[this.$route.params.tab]) {
-						this.load(this.$route.params.tab)
-					}
+			this.apiRequest()
+				.then(this.wpApiLoaded, error => {
+					this.state = 'error'
+					this.site.error = error.message
 				})
-
-				this.apiRequest('/wp/v2/taxonomies').then(({ data }) => {
-					for (const taxonomy in data) {
-						const restBase = data[taxonomy].rest_base
-
-						data[taxonomy].items = []
-						this.$set(this.site.filters, restBase, '')
-
-						this.apiRequest(`/wp/v2/${data[taxonomy].rest_base}?per_page=100`).then((re) => {
-							data[taxonomy].items.push(...re.data)
-						})
-					}
-
-					this.site.taxonomies = data
-				})
-
-				this.state = 'idle'
-			}, error => {
-				this.state = 'error'
-				this.site.error = error.message
-			})
 		}, 250),
+		wpApiLoaded({ data }) {
+			this.site.apiUrl = data.home + '/wp-json'
+			this.site.info = data
+
+			this.apiRequest('/wp/v2/types').then(({ data }) => {
+
+				for (const type in data) {
+					data[type].total = 0
+					data[type].totalPages = 0
+					data[type].page = 1
+					data[type].items = []
+					data[type].state = 'idle'
+					data[type].error = null
+				}
+
+				this.site.types = data
+
+				if (this.$route.params.tab && data[this.$route.params.tab]) {
+					this.load(this.$route.params.tab)
+				}
+			})
+
+			this.apiRequest('/wp/v2/taxonomies').then(({ data }) => {
+				for (const taxonomy in data) {
+					const restBase = data[taxonomy].rest_base
+
+					data[taxonomy].items = []
+					this.$set(this.site.filters, restBase, '')
+
+					this.apiRequest(`/wp/v2/${data[taxonomy].rest_base}?per_page=50&order=desc&orderby=count`).then((re) => {
+						data[taxonomy].items.push(...re.data)
+					})
+				}
+
+				this.site.taxonomies = data
+			})
+
+			this.state = 'idle'
+		},
 		apiRequest(path, data) {
 			path = path || ''
 			data = data || {}
@@ -482,7 +480,6 @@ export default {
 			this.loadWpApi(q)
 		},
 		$route(route, routeOld) {
-			console.log(route.params, routeOld.params)
 
 			// switch tabs: overview, posts, media, etc.
 			if (route.params.tab && route.params.tab !== routeOld.params.tab && this.site.types[route.params.tab]) {
