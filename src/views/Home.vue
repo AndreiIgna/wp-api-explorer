@@ -77,7 +77,7 @@
 									Sorry, your browser doesn't support embedded audio.
 								</audio>
 								<a v-else-if="media.media_type === 'image'" :href="media.source_url" target="_blank" rel="noreferer">
-									<img :src="media.media_details.sizes.full ? (media.media_details.sizes.medium || media.media_details.sizes.full).source_url : media.source_url" class="card-img-top" loading="lazy" :alt="media.title.rendered">
+									<img :src="media.media_details.sizes && media.media_details.sizes.full ? (media.media_details.sizes.medium || media.media_details.sizes.full).source_url : media.source_url" class="card-img-top" loading="lazy" :alt="media.title.rendered">
 								</a>
 
 								<div class="card-body">
@@ -121,7 +121,7 @@
 						<div class="spinner-border spinner-border-sm" role="status"></div> Loading media files
 					</div>
 
-					<div v-if="site.types[$route.params.tab].totalPages" class="bg-white rounded p-2 my-3">
+					<div v-if="site.types[$route.params.tab].totalPages && site.types[$route.params.tab].state !== 'loading'" class="bg-white rounded p-2 my-3">
 						<div class="row align-items-center">
 							<div class="col">
 								<strong>{{ site.types[$route.params.tab].total }}</strong> items over <strong>{{ site.types[$route.params.tab].totalPages }}</strong> pages
@@ -190,7 +190,7 @@
 						<div class="spinner-border spinner-border-sm" role="status"></div> Loading data
 					</div>
 
-					<div v-if="site.types[$route.params.tab].totalPages" class="bg-white rounded p-2 my-3">
+					<div v-if="site.types[$route.params.tab].totalPages && site.types[$route.params.tab].state !== 'loading'" class="bg-white rounded p-2 my-3">
 						<div class="row align-items-center">
 							<div class="col">
 								<strong>{{ site.types[$route.params.tab].total }}</strong> items over <strong>{{ site.types[$route.params.tab].totalPages }}</strong> pages
